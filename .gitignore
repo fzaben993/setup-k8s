@@ -1,0 +1,10 @@
+staging-infra/inventory-*
+jira_n_mysql_install/inventory
+.DS_Store
+.vagrant/
+tmp/
+dev/log/ansible.log
+.lsp/
+.clj-kondo/
+**/gitlab/**
+!**/gitlab/docker-compose.yml

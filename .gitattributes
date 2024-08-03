@@ -1,0 +1,13 @@
+# Set text attribute for shell scripts, markdown, and YAML files
+*.sh        text
+*.md        text
+*.yaml      text
+*.yml       text
+Makefile    text
+
+# Specify end-of-line normalization for text files
+*.sh        eol=lf
+*.md        eol=lf
+*.yaml      eol=lf
+*.yml       eol=lf
+Makefile    eol=lf

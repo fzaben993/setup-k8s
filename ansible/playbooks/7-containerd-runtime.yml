@@ -1,0 +1,64 @@
+- name: Install Containerd Runtime
+  hosts: all
+  become: yes
+
+  tasks:
+    - name: Install required packages
+      yum:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - yum-utils
+        - device-mapper-persistent-data
+        - lvm2
+
+    - name: Add Docker repository
+      command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      changed_when: false
+
+    - name: Install Containerd
+      yum:
+        name: containerd.io
+        state: present
+
+    - name: Install required packages
+      become_user: root
+      yum:
+        name: "{{ item }}"
+        state: present
+      loop:
+        - yum-utils
+        - device-mapper-persistent-data
+        - lvm2
+
+    - name: Add Docker repository
+      become_user: root
+      command: yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+      changed_when: false  # Ignore change detection for this command
+
+    - name: Install Containerd
+      become_user: root
+      yum:
+        name: containerd.io
+        state: present
+
+    - name: Configure Containerd
+      become_user: root
+      copy:
+        dest: /etc/containerd/config.toml
+        content: |
+          [plugins."io.containerd.grpc.v1.cri".containerd]
+            [plugins."io.containerd.grpc.v1.cri".containerd.systemd_cgroup]
+              enabled = true
+
+    - name: Restart Containerd
+      become_user: root
+      systemd:
+        name: containerd
+        state: restarted
+
+    - name: Enable Containerd at boot
+      become_user: root
+      systemd:
+        name: containerd
+        enabled: yes

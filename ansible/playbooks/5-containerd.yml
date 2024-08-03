@@ -1,0 +1,27 @@
+---
+- name: Enable and Load Kernel Modules
+  hosts: all # You can change this to the target host or group if needed
+  become: yes
+
+  tasks:
+    - name: Ensure the directory exists
+      become_user: root
+      file:
+        path: /etc/modules-load.d
+        state: directory
+
+    - name: Create the containerd.conf file if it doesn't exist
+      become_user: root
+      copy:
+        content: |
+          overlay
+          br_netfilter
+        dest: /etc/modules-load.d/containerd.conf
+        force: no # Do not overwrite if the file already exists
+
+    - name: Load Kernel Modules
+      become_user: root
+      command: modprobe {{ item }}
+      loop:
+        - overlay
+        - br_netfilter

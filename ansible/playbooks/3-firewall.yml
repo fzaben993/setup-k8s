@@ -1,0 +1,11 @@
+- name: Stop and Disable firewall
+  hosts: all # Specify the target hosts
+  become: yes # This ensures the playbook runs with sudo privileges
+  tasks:
+    - name: Disable and stop the firewalld service
+      systemd:
+        name: firewalld
+        enabled: no
+        state: stopped
+      async: 300 # Adjust the timeout as needed
+      poll: 0

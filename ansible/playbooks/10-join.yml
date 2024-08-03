@@ -1,0 +1,14 @@
+---
+- name: Configure Kubernetes Worker Nodes
+  hosts: workers  # Make sure to define the 'workers' group in your Ansible inventory
+  become: yes
+
+  tasks:
+    - name: Copy joincluster.sh to worker nodes
+      copy:
+        src: "./joincluster.sh"  # Replace with the path where you stored joincluster.sh on the control node
+        dest: "/tmp/joincluster.sh"
+        mode: '0755'
+
+    - name: Execute joincluster.sh on worker nodes
+      shell: "/tmp/joincluster.sh"

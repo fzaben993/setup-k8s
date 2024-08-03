@@ -1,0 +1,26 @@
+---
+- name: Disable Swap and Set SELinux to Permissive
+  hosts: all
+  become: true
+  tasks:
+    - name: Comment out swap entry in /etc/fstab
+      lineinfile:
+        path: /etc/fstab
+        regexp: "^.*swap.*$"
+        line: "# {{ item }}"
+        state: present
+      when: ansible_swaptotal_mb > 0
+      loop: "{{ ansible_mounts | map(attribute='device') | list }}"
+      tags: disable_swap
+
+    - name: Disable swap
+      command: swapoff -a
+      when: ansible_swaptotal_mb > 0
+      tags: disable_swap
+
+    - name: Set SELinux to Permissive in /etc/selinux/config
+      lineinfile:
+        path: /etc/selinux/config
+        regexp: "^SELINUX=enforcing$"
+        line: "SELINUX=permissive"
+      tags: set_selinux_permissive

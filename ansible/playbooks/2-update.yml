@@ -1,0 +1,23 @@
+- name: Update packages using yum and check status asynchronously
+  hosts: all
+  become: true
+  tasks:
+    - name: Update packages using yum asynchronously
+      yum:
+        name: "*"
+        state: latest
+      async: 600 # Set the timeout for the async task in seconds
+      poll: 0 # Polling interval, 0 means don't wait for the task to finish
+      register: async_result
+
+    - name: Wait for the asynchronous task to finish
+      async_status:
+        jid: "{{ async_result.ansible_job_id }}" # Use the ansible_job_id from the previous task
+      register: update_status
+      until: update_status.finished
+      retries: 180
+      delay: 10
+
+    - name: Show the result
+      debug:
+        var: update_status

@@ -1,0 +1,20 @@
+---
+- name: Register Playbook
+  hosts: all
+  become: true
+  vars:
+    username: "fzaben993"
+    password: "Pass@123"
+    ansible_python_interpreter: /usr/bin/python3  # specify Python interpreter
+  tasks:
+    - name: Update Subscription Manager
+      yum:
+        name: subscription-manager
+        state: latest
+
+    - name: Register RHEL subscription
+      redhat_subscription:
+        state: "present"
+        username: "{{ username }}"
+        password: "{{ password }}"
+        force_register: true

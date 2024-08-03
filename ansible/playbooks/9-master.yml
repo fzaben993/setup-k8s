@@ -1,0 +1,81 @@
+---
+- name: Configure Kubernetes Master
+  hosts: masters
+  become: yes
+  vars:
+    apiserver_advertise_address: "192.168.200.100"
+
+  tasks:
+    - name: Pull required containers
+      command: kubeadm config images pull
+      ignore_errors: yes
+
+    - name: Initialize Kubernetes Cluster
+      command: kubeadm init --apiserver-advertise-address={{ apiserver_advertise_address }} --pod-network-cidr=192.168.0.0/16 --ignore-preflight-errors=all
+      register: kubeadm_init_result
+      ignore_errors: yes
+
+    - name: Save initialization logs
+      copy:
+        content: "{{ kubeadm_init_result.stdout }}"  # Fixed the extra braces
+        dest: "/root/kubeinit.log"
+
+    - name: Create .kube directory
+      file:
+        path: "$HOME/.kube"
+        state: directory
+      register: create_kube_dir_result
+
+    - name: Debug .kube directory creation
+      debug:
+        var: create_kube_dir_result
+
+    - name: Copy admin.conf to .kube/config
+      copy:
+        src: "/etc/kubernetes/admin.conf"
+        dest: "$HOME/.kube/config"
+        remote_src: yes  # Add this line
+      register: copy_admin_conf_result
+
+    - name: Debug admin.conf copy
+      debug:
+        var: copy_admin_conf_result
+
+    - name: Change ownership of .kube/config
+      file:
+        path: "/root/.kube/config"
+        owner: root
+        group: root
+        mode: '0600'
+      register: chown_result
+
+    - name: Debug chown
+      debug:
+        var: chown_result
+
+    # Using a valid Calico URL
+    # - name: Check if Calico is already installed
+    #   shell: kubectl get daemonset calico-node -n kube-system
+    #   register: calico_check
+    #   ignore_errors: true
+
+    - name: Deploy Calico network
+      shell: kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/calico.yaml
+      when: calico_check.rc != 0
+      ignore_errors: true
+
+    - name: Generate and save cluster join command
+      shell: kubeadm token create --print-join-command
+      register: join_command
+      ignore_errors: true
+
+    - name: Save join command
+      copy:
+        content: "{{ join_command.stdout }}"  # Fixed the extra braces
+        dest: "/joincluster.sh"
+
+    - name: Fetch join cluster command to local machine
+      fetch:
+        src: "/joincluster.sh"
+        dest: "./joincluster.sh"
+        flat: yes

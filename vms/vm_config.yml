@@ -1,0 +1,16 @@
+# vm_config.yml
+vms:
+  - name: cp-01
+    ip: 192.168.200.100
+  - name: node-01
+    ip: 192.168.200.101
+  - name: node-02
+    ip: 192.168.200.102
+
+common_config:
+  box: generic/rhel8
+  memory: "4096"
+  cpus: "2"
+  ssh_pub_key_source: ~/.ssh/id_rsa.pub
+  ssh_pub_key_dest: /home/vagrant/id_rsa.pub
+  authorized_keys_path: /home/vagrant/.ssh/authorized_keys

@@ -1,0 +1,50 @@
+---
+- name: Run Post-Installation Commands on Kubernetes Master
+  hosts: masters  # Make sure to define the 'masters' group in your Ansible inventory
+  become: yes
+
+  tasks:
+    - name: Get Pods in kube-system namespace
+      shell: kubectl get po -n kube-system
+
+    - name: Check cluster readiness
+      shell: kubectl get --raw='/readyz?verbose'
+
+    - name: Get cluster information
+      shell: kubectl cluster-info
+
+    - name: Label node-01 as worker
+      shell: kubectl label node node-01 node-role.kubernetes.io/worker=worker
+      ignore_errors: yes  # Ignores errors if the label already exists
+
+    - name: Label node-02 as worker
+      shell: kubectl label node node-02 node-role.kubernetes.io/worker=worker
+      ignore_errors: yes  # Ignores errors if the label already exists
+      
+    # Using a valid Calico URL
+    # - name: Check if Calico is already installed
+    #   shell: kubectl get daemonset calico-node -n kube-system
+    #   register: calico_check
+    #   ignore_errors: true
+
+    # - name: Deploy Calico network
+    #   shell: |
+    #     kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/tigera-operator.yaml && \
+    #     kubectl create -f https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/custom-resources.yaml && \
+    #     sleep 60 && \
+    #     https://raw.githubusercontent.com/projectcalico/calico/v3.26.1/manifests/custom-resources.yaml && \
+    #     kubectl taint nodes --all node-role.kubernetes.io/master-
+    #   # when: calico_check.rc != 0
+    #   ignore_errors: true
+
+    # - name: Apply Metrics Server
+    #   shell: kubectl apply -f https://raw.githubusercontent.com/techiescamp/kubeadm-scripts/main/manifests/metrics-server.yaml
+# kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.6.4/components.yaml
+
+
+    # - name: Get node metrics
+    #   shell: kubectl top nodes
+    #   register: result
+    #   until: result.rc == 0
+    #   retries: 5  # Number of retries
+    #   delay: 10  # Delay between retries in seconds
